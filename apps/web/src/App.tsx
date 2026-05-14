@@ -5,6 +5,7 @@ import { FileExplorer } from '@/components/explorer/FileExplorer';
 import { CenterPanel } from '@/components/layout/CenterPanel';
 import { RightPanel } from '@/components/layout/RightPanel';
 import { NewProjectDialog } from '@/components/project/NewProjectDialog';
+import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { api } from '@/lib/api';
 import { useProjectStore } from '@/stores/project';
 import { useSkillDetection } from '@/features/skills/useSkillDetection';
@@ -69,15 +70,21 @@ export default function App() {
         {project ? (
           <PanelGroup direction="horizontal">
             <Panel defaultSize={16} minSize={10} maxSize={30}>
-              <FileExplorer />
+              <ErrorBoundary label="File explorer">
+                <FileExplorer />
+              </ErrorBoundary>
             </Panel>
             <PanelResizeHandle className="w-1 bg-border hover:bg-primary/40" />
             <Panel defaultSize={54} minSize={30}>
-              <CenterPanel />
+              <ErrorBoundary label="Editor">
+                <CenterPanel />
+              </ErrorBoundary>
             </Panel>
             <PanelResizeHandle className="w-1 bg-border hover:bg-primary/40" />
             <Panel defaultSize={30} minSize={20} maxSize={50}>
-              <RightPanel />
+              <ErrorBoundary label="Tutor">
+                <RightPanel />
+              </ErrorBoundary>
             </Panel>
           </PanelGroup>
         ) : (

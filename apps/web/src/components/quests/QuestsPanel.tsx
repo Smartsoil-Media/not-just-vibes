@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Check, Compass, SkipForward, Sparkles } from 'lucide-react';
 import type { SideQuest, SkillState } from '@njv/shared';
-import { skills } from '@njv/skills-catalog';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
+import { pickCandidate } from '@/features/quests/select';
 import { useProjectStore } from '@/stores/project';
 import { cn } from '@/lib/utils';
 
@@ -28,22 +28,12 @@ export function QuestsPanel() {
     if (project) refresh();
   }, [project?.id, refresh]);
 
-  const stateById = useMemo(
-    () => Object.fromEntries(state.map((s) => [s.skillId, s])),
-    [state],
-  );
-
-  /** Skills whose prereqs are at least 'introduced' but the skill itself isn't yet practiced. */
   const candidate = useMemo(() => {
-    return skills.find((s) => {
-      const own = stateById[s.id]?.level ?? 'unseen';
-      if (own === 'practiced' || own === 'mastered') return false;
-      if (s.prerequisites.length === 0) return own === 'unseen';
-      return s.prerequisites.every(
-        (p) => stateById[p] && stateById[p].level !== 'unseen',
-      );
-    });
-  }, [stateById]);
+    const skipped = new Set(
+      quests.filter((q) => q.status === 'skipped').map((q) => q.skillId),
+    );
+    return pickCandidate(state, { skippedSkillIds: skipped });
+  }, [state, quests]);
 
   async function generate() {
     if (!project || !candidate || busy) return;

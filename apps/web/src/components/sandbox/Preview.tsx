@@ -1,6 +1,9 @@
-import { useMemo } from 'react';
-import { SandpackProvider, SandpackLayout, SandpackPreview, SandpackConsole } from '@codesandbox/sandpack-react';
+import { Suspense, lazy, useMemo } from 'react';
 import { useProjectStore } from '@/stores/project';
+
+const SandpackImpl = lazy(() =>
+  import('./SandpackImpl').then((m) => ({ default: m.SandpackImpl })),
+);
 
 export function Preview() {
   const project = useProjectStore((s) => s.project);
@@ -28,17 +31,14 @@ createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictM
   }
 
   return (
-    <SandpackProvider
-      key={project.id}
-      template="react-ts"
-      theme="dark"
-      files={files}
-      options={{ recompileMode: 'delayed', recompileDelay: 600 }}
+    <Suspense
+      fallback={
+        <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
+          Loading sandbox…
+        </div>
+      }
     >
-      <SandpackLayout style={{ height: '100%', border: 'none' }}>
-        <SandpackPreview style={{ height: '60%' }} showOpenInCodeSandbox={false} />
-        <SandpackConsole style={{ height: '40%' }} />
-      </SandpackLayout>
-    </SandpackProvider>
+      <SandpackImpl projectKey={project.id} files={files} />
+    </Suspense>
   );
 }

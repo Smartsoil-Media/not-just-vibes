@@ -1,27 +1,8 @@
 import { useMemo } from 'react';
 import { Cloud, Cpu, User } from 'lucide-react';
 import { HintBlock } from './HintBlock';
+import { parseSegments } from './parse-segments';
 import { useTutorStore, type TutorMessage } from '@/stores/tutor';
-
-interface Segment {
-  type: 'text' | 'code';
-  text: string;
-  language?: string;
-}
-
-function parseSegments(content: string): Segment[] {
-  const out: Segment[] = [];
-  const re = /```([\w-]*)\n([\s\S]*?)```/g;
-  let last = 0;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(content))) {
-    if (m.index > last) out.push({ type: 'text', text: content.slice(last, m.index) });
-    out.push({ type: 'code', text: m[2] ?? '', language: m[1] ?? undefined });
-    last = m.index + m[0].length;
-  }
-  if (last < content.length) out.push({ type: 'text', text: content.slice(last) });
-  return out;
-}
 
 export function Message({ msg }: { msg: TutorMessage }) {
   const reveal = useTutorStore((s) => s.reveal);

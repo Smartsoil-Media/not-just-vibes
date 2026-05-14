@@ -30,4 +30,7 @@ jobs:
 
       - run: pnpm test
 
+      - name: drizzle migrations in sync with schema
+        run: pnpm --filter @njv/server db:check
+
       - run: pnpm -r --filter=./apps/* run build

@@ -5,13 +5,19 @@ import { dirname } from 'node:path';
 import { env } from '../env.js';
 import * as schema from './schema.js';
 
-const fileUrl = env.DATABASE_URL.startsWith('file:')
-  ? env.DATABASE_URL.slice('file:'.length)
-  : null;
-if (fileUrl) {
-  mkdirSync(dirname(fileUrl), { recursive: true });
+export { schema };
+
+export function createDb(url: string = env.DATABASE_URL) {
+  const fileUrl = url.startsWith('file:') ? url.slice('file:'.length) : null;
+  if (fileUrl) {
+    mkdirSync(dirname(fileUrl), { recursive: true });
+  }
+  const client = createClient({ url });
+  return drizzle(client, { schema });
 }
 
-const client = createClient({ url: env.DATABASE_URL });
-export const db = drizzle(client, { schema });
-export { schema };
+/**
+ * Default app-wide db, configured from the environment.
+ * Kept for legacy imports; new code should accept `Deps` and use `deps.db`.
+ */
+export const db = createDb();

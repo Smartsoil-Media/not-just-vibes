@@ -86,6 +86,11 @@ export const api = {
       { method: 'POST', body: JSON.stringify({ projectId, skillId }) },
     ),
   sideQuests: (projectId: string) => json<SideQuest[]>(`/api/skills/side-quests/${projectId}`),
+  updateSideQuest: (id: string, status: 'open' | 'done' | 'skipped') =>
+    json<{ ok: true }>(`/api/skills/side-quests/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }),
 
   progress: (projectId: string) => json<ProgressStep[]>(`/api/progress/${projectId}`),
   setProgress: (projectId: string, steps: { title: string; description: string }[]) =>

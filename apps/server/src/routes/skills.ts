@@ -109,3 +109,13 @@ skillsRouter.get('/side-quests/:projectId', async (c) => {
     .where(eq(schema.sideQuests.projectId, c.req.param('projectId')));
   return c.json(rows);
 });
+
+skillsRouter.patch('/side-quests/:id', async (c) => {
+  const id = c.req.param('id');
+  const body = (await c.req.json()) as { status: 'open' | 'done' | 'skipped' };
+  await db
+    .update(schema.sideQuests)
+    .set({ status: body.status })
+    .where(eq(schema.sideQuests.id, id));
+  return c.json({ ok: true });
+});

@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import ReactFlow, { Background, Controls, type Edge, type Node } from 'react-flow-renderer';
+import {
+  Background,
+  Controls,
+  ReactFlow,
+  type Edge,
+  type Node,
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
 import type { SkillState } from '@njv/shared';
 import { skills } from '@njv/skills-catalog';
 import { api } from '@/lib/api';
@@ -37,7 +44,7 @@ export function SkillTree() {
   const nodes: Node[] = useMemo(() => {
     const byCat = new Map<string, number>();
     return skills.map((s) => {
-      const colIdx = COLUMNS.indexOf(s.category as typeof COLUMNS[number]);
+      const colIdx = COLUMNS.indexOf(s.category as (typeof COLUMNS)[number]);
       const rowIdx = byCat.get(s.category) ?? 0;
       byCat.set(s.category, rowIdx + 1);
       const lvl = byId[s.id]?.level ?? 'unseen';

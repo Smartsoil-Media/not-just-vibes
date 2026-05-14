@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ChatPanel } from '@/components/chat/ChatPanel';
 import { ProgressTracker } from '@/components/progress/ProgressTracker';
+import { QuestsPanel } from '@/components/quests/QuestsPanel';
 import { SkillTree } from '@/components/skill-tree/SkillTree';
 import { Button } from '@/components/ui/button';
 import { usePlanProject } from '@/features/tutor/usePlanProject';
@@ -19,6 +20,7 @@ export function RightPanel() {
         <TabsList className="h-7">
           <TabsTrigger value="tutor">Tutor</TabsTrigger>
           <TabsTrigger value="plan">Plan</TabsTrigger>
+          <TabsTrigger value="quests">Quests</TabsTrigger>
           <TabsTrigger value="skills">Skills</TabsTrigger>
         </TabsList>
         {project && (
@@ -51,6 +53,9 @@ export function RightPanel() {
       </TabsContent>
       <TabsContent value="plan" className="mt-0 flex-1 overflow-auto">
         <ProgressTracker />
+      </TabsContent>
+      <TabsContent value="quests" className="mt-0 flex-1 overflow-auto">
+        <QuestsPanel />
       </TabsContent>
       <TabsContent value="skills" className="mt-0 flex-1 overflow-hidden">
         <SkillTree />

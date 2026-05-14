@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { nanoid } from 'nanoid';
-import type { AISource } from '@njv/shared';
+import type { AISource, ChatMessage } from '@njv/shared';
 
 export interface TutorMessage {
   id: string;
@@ -18,6 +18,7 @@ interface TutorState {
   appendToken: (id: string, t: string) => void;
   endStream: (id: string) => void;
   reveal: (id: string, blockIndex: number) => void;
+  hydrate: (rows: ChatMessage[]) => void;
   reset: () => void;
 }
 
@@ -52,5 +53,18 @@ export const useTutorStore = create<TutorState>((set) => ({
           : m,
       ),
     })),
+  hydrate: (rows) =>
+    set({
+      messages: rows
+        .filter((r) => r.role !== 'system')
+        .map((r) => ({
+          id: r.id,
+          role: r.role as 'user' | 'assistant',
+          source: r.source,
+          content: r.content,
+          revealed: {},
+          streaming: false,
+        })),
+    }),
   reset: () => set({ messages: [] }),
 }));

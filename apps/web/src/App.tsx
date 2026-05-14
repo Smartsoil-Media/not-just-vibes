@@ -9,6 +9,7 @@ import { api } from '@/lib/api';
 import { useProjectStore } from '@/stores/project';
 import { useSkillDetection } from '@/features/skills/useSkillDetection';
 import { useCommitToAI } from '@/features/tutor/useCommitToAI';
+import { usePlanProject } from '@/features/tutor/usePlanProject';
 import { useTutorStore } from '@/stores/tutor';
 
 const LAST_PROJECT_KEY = 'njv:lastProjectId';
@@ -17,22 +18,35 @@ export default function App() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const setProject = useProjectStore((s) => s.setProject);
   const project = useProjectStore((s) => s.project);
+  const hydrateMessages = useTutorStore((s) => s.hydrate);
   const resetMessages = useTutorStore((s) => s.reset);
   const { run: commitToAI, busy: committing } = useCommitToAI();
+  const { plan, planning } = usePlanProject();
   useSkillDetection();
 
   const loadProject = useCallback(
-    async (id: string) => {
+    async (id: string, opts: { autoPlan?: boolean } = {}) => {
       try {
         const p = await api.getProject(id);
         setProject(p);
         localStorage.setItem(LAST_PROJECT_KEY, id);
-        resetMessages();
+
+        try {
+          const history = await api.chatHistory(id);
+          hydrateMessages(history);
+        } catch {
+          resetMessages();
+        }
+
+        if (opts.autoPlan) {
+          // Fire-and-forget — Plan tab will refresh from the server.
+          void plan().catch(() => {});
+        }
       } catch {
         localStorage.removeItem(LAST_PROJECT_KEY);
       }
     },
-    [setProject, resetMessages],
+    [setProject, hydrateMessages, resetMessages, plan],
   );
 
   useEffect(() => {
@@ -44,9 +58,11 @@ export default function App() {
   return (
     <div className="flex h-full flex-col">
       <Topbar onNewProject={() => setDialogOpen(true)} onCommitToAI={() => commitToAI()} />
-      {committing && (
+      {(committing || planning) && (
         <div className="border-b border-border bg-secondary/40 px-3 py-1 text-[11px] text-muted-foreground">
-          Sending the whole codebase to Claude for review…
+          {committing
+            ? 'Sending the whole codebase to Claude for review…'
+            : 'Asking Claude to break this project into steps…'}
         </div>
       )}
       <div className="flex-1 overflow-hidden">
@@ -73,7 +89,7 @@ export default function App() {
       <NewProjectDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        onCreated={(id) => loadProject(id)}
+        onCreated={(id) => loadProject(id, { autoPlan: true })}
       />
     </div>
   );

@@ -14,6 +14,7 @@
     "dev:server": "pnpm --filter @njv/server dev",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r --workspace-concurrency=1 --filter=./apps/* run test",
     "lint": "pnpm -r lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md,css}\"",
     "db:push": "pnpm --filter @njv/server db:push"

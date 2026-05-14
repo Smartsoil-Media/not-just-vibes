@@ -1,32 +1,39 @@
 import { useEffect, useRef } from 'react';
 import { useProjectStore } from '@/stores/project';
 import { api } from '@/lib/api';
+import { diffIsTrivial, unifiedDiff } from '@/lib/diff';
 
 /**
- * After the user pauses editing, send a compact "diff" (just the file list + sizes)
- * to the local LLM and update skill state. We don't compute a real diff here —
- * the detector reads the current content; the field is named "diff" to leave room
- * for a real diff later.
+ * After the user pauses editing, compute a unified diff against the last
+ * detection baseline and send it to the local LLM. If the diff is empty or
+ * trivial we skip the call entirely — keeps token use minimal.
  */
 export function useSkillDetection() {
   const project = useProjectStore((s) => s.project);
-  const filesString = project ? Object.values(project.files).join('\n').length.toString() : '';
+  const baseline = useProjectStore((s) => s.detectionBaseline);
+  const markBaseline = useProjectStore((s) => s.markDetectionBaseline);
   const debounce = useRef<number | null>(null);
+  const filesSig = project ? Object.values(project.files).join('\n').length.toString() : '';
 
   useEffect(() => {
     if (!project) return;
     if (debounce.current) window.clearTimeout(debounce.current);
-    debounce.current = window.setTimeout(() => {
-      void api
-        .detectSkills({
+    debounce.current = window.setTimeout(async () => {
+      const diff = unifiedDiff(baseline, project.files);
+      if (!diff || diffIsTrivial(diff)) return;
+      try {
+        await api.detectSkills({
           projectId: project.id,
-          diff: `(snapshot at ${Date.now()})`,
+          diff,
           files: project.files,
-        })
-        .catch(() => {});
+        });
+        markBaseline(project.files);
+      } catch {
+        // local model may be down — try again next pause
+      }
     }, 4000);
     return () => {
       if (debounce.current) window.clearTimeout(debounce.current);
     };
-  }, [project?.id, filesString]);
+  }, [project?.id, filesSig, baseline, markBaseline]);
 }

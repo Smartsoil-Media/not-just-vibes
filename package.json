@@ -1,0 +1,26 @@
+{
+  "name": "not-just-vibes",
+  "private": true,
+  "version": "0.0.1",
+  "description": "AI coding tutor — local Qwen for fast hints, Claude for deep reviews",
+  "type": "module",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter=./apps/* run dev",
+    "dev:web": "pnpm --filter @njv/web dev",
+    "dev:server": "pnpm --filter @njv/server dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md,css}\"",
+    "db:push": "pnpm --filter @njv/server db:push"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "prettier-plugin-tailwindcss": "^0.6.8",
+    "typescript": "^5.6.3"
+  }
+}

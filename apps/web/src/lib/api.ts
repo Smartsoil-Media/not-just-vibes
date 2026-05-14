@@ -11,6 +11,7 @@ import type {
   StuckLevel,
 } from '@njv/shared';
 import type { SkillDef } from '@njv/skills-catalog';
+import { splitSseFrames } from './sse-parser';
 
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8787';
 
@@ -124,19 +125,11 @@ export async function* streamSSE(
     const { value, done } = await reader.read();
     if (done) break;
     buf += decoder.decode(value, { stream: true });
-    let idx;
-    while ((idx = buf.indexOf('\n\n')) !== -1) {
-      const raw = buf.slice(0, idx);
-      buf = buf.slice(idx + 2);
-      const lines = raw.split('\n');
-      let event = 'message';
-      let data = '';
-      for (const line of lines) {
-        if (line.startsWith('event:')) event = line.slice(6).trim();
-        else if (line.startsWith('data:')) data += line.slice(5).replace(/^ /, '');
-      }
-      if (event === 'token' && data) yield data;
-      if (event === 'done') return;
+    const { frames, rest } = splitSseFrames(buf);
+    buf = rest;
+    for (const frame of frames) {
+      if (frame.event === 'token' && frame.data) yield frame.data;
+      if (frame.event === 'done') return;
     }
   }
 }
